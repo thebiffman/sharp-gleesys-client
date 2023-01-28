@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpGlesysClient", "SharpGlesysClient\SharpGlesysClient.csproj", "{9F307D42-27C8-4A5F-B760-14AFC7BE2039}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PublicIpUpdater", "PublicIpUpdater\PublicIpUpdater.csproj", "{D7849B52-9CD2-4A56-B245-CFD0FC6884C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F307D42-27C8-4A5F-B760-14AFC7BE2039}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F307D42-27C8-4A5F-B760-14AFC7BE2039}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F307D42-27C8-4A5F-B760-14AFC7BE2039}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F307D42-27C8-4A5F-B760-14AFC7BE2039}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7849B52-9CD2-4A56-B245-CFD0FC6884C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7849B52-9CD2-4A56-B245-CFD0FC6884C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7849B52-9CD2-4A56-B245-CFD0FC6884C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7849B52-9CD2-4A56-B245-CFD0FC6884C8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AD14B1F2-E5A1-42DC-A62F-88332990FEAC}
+	EndGlobalSection
+EndGlobal
