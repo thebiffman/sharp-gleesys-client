@@ -56,7 +56,7 @@ namespace PublicIpUpdater
                     if (selectedRecord == null) // TODO CREATE
                     {
                         Console.WriteLine("Unable to find the desired record, continue...");
-                        return;
+                        continue;
                     }
 
                     Console.WriteLine();
