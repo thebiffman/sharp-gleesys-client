@@ -82,6 +82,7 @@ namespace PublicIpUpdater
                     Console.WriteLine($"Request status: {updateResult.Result.Response.Status.Code}");
                     Console.WriteLine("Returned record:");
                     Console.WriteLine($"{updateResult.Result.Response.Record.Recordid}-{updateResult.Result.Response.Record.Host}.{updateResult.Result.Response.Record.Domainname}:{updateResult.Result.Response.Record.Data} ({updateResult.Result.Response.Record.Ttl})");
+                    Console.WriteLine();
                 }
 
 
