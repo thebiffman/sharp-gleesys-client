@@ -1,68 +1,79 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SharpGlesysClient;
-using SharpGlesysClient.Dto.Domain;
-
-Console.WriteLine("Starting...");
+using PublicIpUpdater;
 
 IConfiguration config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
-var settings = config.GetRequiredSection("Settings");
+var settings = config.GetRequiredSection("PublicIpUpdaterSettings");
 
 var url = settings["WebServiceUrl"];
 var username = settings["Username"];
 var apiKey = settings["ApiKey"];
+var usePublicIp = Convert.ToBoolean(settings["UsePublicIp"]);
+var ipStartsWith = settings["IpStartsWith"];
+var ttl = Convert.ToInt32(settings["ttl"]);
 
-if (url == null || username == null || apiKey == null)
+var domainsSection = settings.GetSection("Domains");
+
+var recordList = new List<DomainRecord>();
+foreach (var record in domainsSection.GetChildren())
+{
+    if (string.IsNullOrEmpty(record.Key))
+    {
+        continue;
+    }
+
+    foreach (var hosts in record.GetChildren())
+    {
+        if (string.IsNullOrEmpty(hosts.Value) || string.IsNullOrEmpty(hosts.Key))
+        {
+            continue;
+        }
+        recordList.Add(new DomainRecord
+        {
+            Domain = record.Key,
+            Host = hosts.Value
+        });
+    }
+}
+
+Console.WriteLine("Starting...");
+
+if (url == null || username == null || apiKey == null || (usePublicIp == false && string.IsNullOrEmpty(ipStartsWith)))
 {
     Console.WriteLine("Missing configuration, exiting...");
     Console.ReadKey();
     return;
 }
 
-Console.WriteLine();
-
-var glesysClient = new GlesysClient(url, username, apiKey);
-
-var records = glesysClient.Domain.ListRecords("ason.nu");
-
-foreach (var record in records.Result.Response.Records)
+if (usePublicIp)
 {
-    Console.WriteLine($"{record.Recordid}-{record.Host}.{record.Domainname}:{record.Data} ({record.Ttl})");
-}
-
-Console.WriteLine();
-
-var selectedRecord = records.Result.Response.Records
-    .FirstOrDefault(x => 
-        x.Type.Equals("TXT", StringComparison.CurrentCultureIgnoreCase) && 
-        x.Host.Equals("hello", StringComparison.InvariantCultureIgnoreCase)
-        );
-
-if (selectedRecord == null)
-{
-    Console.WriteLine("Unable to find the desired record, exiting...");
-    Console.ReadKey();
+    var updateRecordsWithPublicIp = new UpdateRecordsWIthPublicIp();
+    updateRecordsWithPublicIp.Run(new PublicIpUpdaterSettings
+    {
+        Ttl = ttl,
+        ApiKey = apiKey,
+        Url = url,
+        UserName = username,
+        RecordsToUpdate = recordList,
+    });
     return;
 }
 
-Console.WriteLine();
-Console.WriteLine("Selected record:");
-Console.WriteLine($"{selectedRecord.Recordid}-{selectedRecord.Host}.{selectedRecord.Domainname}:{selectedRecord.Data} ({selectedRecord.Ttl})");
-
-Console.WriteLine();
-Console.WriteLine("Updating selected record with new values...");
-var updateResult = glesysClient.Domain.UpdateRecord(new UpdateRecordRequest
+if (!usePublicIp && !string.IsNullOrEmpty(ipStartsWith))
 {
-    Recordid = selectedRecord.Recordid.ToString(),
-    //Host = selectedRecord.Host,
-    Data = selectedRecord.Data + "7",
-    //Ttl = selectedRecord.Ttl.ToString(),
-    //Type = selectedRecord.Type,
-});
-Console.WriteLine($"Request status: {updateResult.Result.Response.Status.Code}");
-Console.WriteLine("Returned record:");
-Console.WriteLine($"{updateResult.Result.Response.Record.Recordid}-{updateResult.Result.Response.Record.Host}.{updateResult.Result.Response.Record.Domainname}:{updateResult.Result.Response.Record.Data} ({updateResult.Result.Response.Record.Ttl})");
+    var updateRecordsWithInternalIp = new UpdateRecordsWIthInternalIp();
+    updateRecordsWithInternalIp.Run(new UpdateWithInternalIpConfiguration
+    {
+        Ttl = ttl,
+        ApiKey = apiKey,
+        Url = url,
+        UserName = username,
+        IpStartsWith = ipStartsWith,
+        RecordsToUpdate = recordList,
+    });
+}
 
-Console.ReadKey();
+
+
