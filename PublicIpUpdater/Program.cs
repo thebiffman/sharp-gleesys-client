@@ -3,37 +3,55 @@ using PublicIpUpdater;
 
 IConfiguration config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
+    .AddEnvironmentVariables()
     .Build();
 
 var settings = config.GetRequiredSection("PublicIpUpdaterSettings");
 
-var url = settings["WebServiceUrl"];
-var username = settings["Username"];
-var apiKey = settings["ApiKey"];
-var usePublicIp = Convert.ToBoolean(settings["UsePublicIp"]);
-var ipStartsWith = settings["IpStartsWith"];
-var ttl = Convert.ToInt32(settings["ttl"]);
+var url 
+    = Environment.GetEnvironmentVariable("WEBSERVICE_URL", EnvironmentVariableTarget.Process) 
+      ?? settings["WebServiceUrl"];
 
-var domainsSection = settings.GetSection("Domains");
+var username 
+    = Environment.GetEnvironmentVariable("GLESYS_USERNAME", EnvironmentVariableTarget.Process) 
+      ?? settings["Username"];
+
+var apiKey 
+    = Environment.GetEnvironmentVariable("GLESYS_APIKEY", EnvironmentVariableTarget.Process) 
+      ?? settings["ApiKey"];
+
+var usePublicIpString 
+    = Environment.GetEnvironmentVariable("GLESYS_USE_PUBLIC_IP", EnvironmentVariableTarget.Process) 
+      ?? settings["UsePublicIp"];
+
+var ipStartsWith 
+    = Environment.GetEnvironmentVariable("GLESYS_IP_STARTS_WITH", EnvironmentVariableTarget.Process) 
+      ?? settings["IpStartsWith"];
+
+var ttlString 
+    = Environment.GetEnvironmentVariable("GLESYS_TTL", EnvironmentVariableTarget.Process) 
+      ?? settings["ttl"];
+
+var usePublicIp = Convert.ToBoolean(usePublicIpString);
+var ttl = Convert.ToInt32(ttlString);
+
+var domains 
+    = Environment.GetEnvironmentVariable("GLESYS_DOMAINS", EnvironmentVariableTarget.Process)
+    ?? settings["Domains"];
 
 var recordList = new List<DomainRecord>();
-foreach (var record in domainsSection.GetChildren())
+foreach (var domainInfo in domains.Split("|"))
 {
-    if (string.IsNullOrEmpty(record.Key))
-    {
-        continue;
-    }
+    var domainInfoSplit = domainInfo.Split("#");
+    var domain = domainInfoSplit[0];
+    var hosts = domainInfoSplit[1].Split(",");
 
-    foreach (var hosts in record.GetChildren())
+    foreach (var host in hosts)
     {
-        if (string.IsNullOrEmpty(hosts.Value) || string.IsNullOrEmpty(hosts.Key))
-        {
-            continue;
-        }
         recordList.Add(new DomainRecord
         {
-            Domain = record.Key,
-            Host = hosts.Value
+            Domain = domain,
+            Host = host
         });
     }
 }

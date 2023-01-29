@@ -38,6 +38,7 @@ namespace PublicIpUpdater
             {
                 var currentRecords = glesysClient.Domain.ListRecords(domainToUpdate.Key).Result.Response.Records;
 
+                Console.WriteLine();
                 Console.WriteLine("Printing all records for domain:");
                 foreach (var record in currentRecords)
                 {
