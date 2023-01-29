@@ -39,8 +39,8 @@ namespace PublicIpUpdater
                 var currentRecords = glesysClient.Domain.ListRecords(domainToUpdate.Key).Result.Response.Records;
 
                 Console.WriteLine();
-                Console.WriteLine("Printing all records for domain:");
-                foreach (var record in currentRecords)
+                Console.WriteLine($"Printing all A records for domain '{domainToUpdate.Key}':");
+                foreach (var record in currentRecords.Where(x => x.Type.Equals("a", StringComparison.InvariantCultureIgnoreCase)))
                 {
                     Console.WriteLine($"    {record.Recordid}-{record.Host}.{record.Domainname}:{record.Data} ({record.Ttl})");
                 }
@@ -55,7 +55,8 @@ namespace PublicIpUpdater
 
                     if (selectedRecord == null) // TODO CREATE
                     {
-                        Console.WriteLine("Unable to find the desired record, continue...");
+                        Console.WriteLine();
+                        Console.WriteLine($"Unable to find the desired A record with host '{host}', continue...");
                         continue;
                     }
 
