@@ -111,8 +111,10 @@ namespace PublicIpUpdater
                 {
                     var ipProps = adapter.GetIPProperties();
 
+                    Console.WriteLine($"Listing all IPs and adapters");
                     foreach (var ip in ipProps.UnicastAddresses)
                     {
+                        Console.WriteLine($"  - '{ip.Address}' on adapter '{adapter.Description}'");
                         if (adapter.OperationalStatus == OperationalStatus.Up
                             && ip.Address.AddressFamily == AddressFamily.InterNetwork
                             && ip.Address.ToString().StartsWith(config.IpStartsWith, StringComparison.CurrentCultureIgnoreCase))
