@@ -6,11 +6,8 @@
         public string UserName { get; set; }
         public string ApiKey { get; set; }
         public int Ttl { get; set; }
+        public bool UsePublicIp { get; set; }
         public List<DomainRecord> RecordsToUpdate { get; set; }
-    }
-
-    internal class UpdateWithInternalIpConfiguration : PublicIpUpdaterSettings
-    {
         public string IpStartsWith { get; set; }
     }
 

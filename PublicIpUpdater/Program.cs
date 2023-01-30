@@ -1,43 +1,58 @@
 ﻿using Microsoft.Extensions.Configuration;
 using PublicIpUpdater;
 
-IConfiguration config = new ConfigurationBuilder()
+IConfiguration configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .AddEnvironmentVariables()
     .Build();
 
-var settings = config.GetRequiredSection("PublicIpUpdaterSettings");
+var url = configuration["GLESYS_WEBSERVICE_URL"] ?? "https://api.glesys.com";
 
-var url 
-    = Environment.GetEnvironmentVariable("WEBSERVICE_URL", EnvironmentVariableTarget.Process) 
-      ?? settings["WebServiceUrl"];
+var username = configuration["GLESYS_USERNAME"];
 
-var username 
-    = Environment.GetEnvironmentVariable("GLESYS_USERNAME", EnvironmentVariableTarget.Process) 
-      ?? settings["Username"];
+var apiKey = configuration["GLESYS_APIKEY"];
 
-var apiKey 
-    = Environment.GetEnvironmentVariable("GLESYS_APIKEY", EnvironmentVariableTarget.Process) 
-      ?? settings["ApiKey"];
+var usePublicIpString = configuration["GLESYS_USE_PUBLIC_IP"] ?? "true";
 
-var usePublicIpString 
-    = Environment.GetEnvironmentVariable("GLESYS_USE_PUBLIC_IP", EnvironmentVariableTarget.Process) 
-      ?? settings["UsePublicIp"];
+var ipStartsWith = configuration["GLESYS_IP_STARTS_WITH"];
 
-var ipStartsWith 
-    = Environment.GetEnvironmentVariable("GLESYS_IP_STARTS_WITH", EnvironmentVariableTarget.Process) 
-      ?? settings["IpStartsWith"];
-
-var ttlString 
-    = Environment.GetEnvironmentVariable("GLESYS_TTL", EnvironmentVariableTarget.Process) 
-      ?? settings["ttl"];
+var ttlString = configuration["GLESYS_TTL"] ?? "300";
 
 var usePublicIp = Convert.ToBoolean(usePublicIpString);
 var ttl = Convert.ToInt32(ttlString);
 
-var domains 
-    = Environment.GetEnvironmentVariable("GLESYS_DOMAINS", EnvironmentVariableTarget.Process)
-    ?? settings["Domains"];
+var domains = configuration["GLESYS_DOMAINS"];
+
+if(string.IsNullOrEmpty(url))
+{
+    Console.WriteLine("Variable GLESYS_DOMAINS is required");
+    return;
+}
+
+if (string.IsNullOrEmpty(username))
+{
+    Console.WriteLine("Variable GLESYS_USERNAME is required");
+    return;
+}
+
+if (string.IsNullOrEmpty(apiKey))
+{
+    Console.WriteLine("Variable GLESYS_APIKEY is required");
+    return;
+}
+
+if (string.IsNullOrEmpty(domains))
+{
+    Console.WriteLine("Variable GLESYS_DOMAINS is required in format '<domain1>#<host1>,<host2>|<domain2>#<host1>,<host2>'");
+    return;
+}
+
+
+if (!usePublicIp && string.IsNullOrEmpty(ipStartsWith))
+{
+    Console.WriteLine("Variable GLESYS_IP_STARTS_WITH is required when GLESYS_USE_PUBLIC_IP is set to false");
+    return;
+}
 
 var recordList = new List<DomainRecord>();
 foreach (var domainInfo in domains.Split("|"))
@@ -56,42 +71,21 @@ foreach (var domainInfo in domains.Split("|"))
     }
 }
 
+var config = new PublicIpUpdaterSettings()
+{
+    Ttl = ttl,
+    ApiKey = apiKey,
+    Url = url,
+    UsePublicIp = usePublicIp,
+    UserName = username,
+    IpStartsWith = ipStartsWith,
+    RecordsToUpdate = recordList,
+};
+
 Console.WriteLine("Starting...");
 
-if (url == null || username == null || apiKey == null || (usePublicIp == false && string.IsNullOrEmpty(ipStartsWith)))
-{
-    Console.WriteLine("Missing configuration, exiting...");
-    Console.ReadKey();
-    return;
-}
 
-if (usePublicIp)
-{
-    var updateRecordsWithPublicIp = new UpdateRecordsWIthPublicIp();
-    updateRecordsWithPublicIp.Run(new PublicIpUpdaterSettings
-    {
-        Ttl = ttl,
-        ApiKey = apiKey,
-        Url = url,
-        UserName = username,
-        RecordsToUpdate = recordList,
-    });
-    return;
-}
+var updateRecords = new UpdateRecords();
+updateRecords.DoUpdate(config);
 
-if (!usePublicIp && !string.IsNullOrEmpty(ipStartsWith))
-{
-    var updateRecordsWithInternalIp = new UpdateRecordsWIthInternalIp();
-    updateRecordsWithInternalIp.Run(new UpdateWithInternalIpConfiguration
-    {
-        Ttl = ttl,
-        ApiKey = apiKey,
-        Url = url,
-        UserName = username,
-        IpStartsWith = ipStartsWith,
-        RecordsToUpdate = recordList,
-    });
-}
-
-
-
+Console.WriteLine("Exiting...");

@@ -1,21 +1,18 @@
 ﻿using SharpGlesysClient;
 using SharpGlesysClient.Dto.Domain;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace PublicIpUpdater
 {
-    internal class UpdateRecordsWIthPublicIp
+    internal class UpdateRecords
     {
-        public UpdateRecordsWIthPublicIp()
-        {
-            
-        }
-
-        public void Run(PublicIpUpdaterSettings config)
+        public void DoUpdate(PublicIpUpdaterSettings config)
         {
             Console.WriteLine();
 
-            var ipAddress = GetPublicIpAddress();
+            var ipAddress = GetRelevantIpAddress(config);
 
             if (ipAddress == null)
             {
@@ -91,21 +88,43 @@ namespace PublicIpUpdater
             }
         }
 
-        private string? GetPublicIpAddress()
+        private string? GetRelevantIpAddress(PublicIpUpdaterSettings config)
         {
-            //https://api.ipify.org
+            if (config.UsePublicIp)
+            {
+                Console.Write(Environment.NewLine + "Finding public ip...");
 
-            Console.Write(Environment.NewLine + "Finding public ip...");
+                var client = new HttpClient();
+                var ip = client.GetStringAsync(new Uri("https://api.ipify.org")).Result;
+                var externalIp = IPAddress.Parse(ip);
 
-            var client = new HttpClient();
-            var ip = client.GetStringAsync(new Uri("https://api.ipify.org")).Result;
-            var externalIp = IPAddress.Parse(ip);
+                var ipString = externalIp.ToString();
 
-            var ipString = externalIp.ToString();
+                Console.Write(" Done. IP: " + ipString + Environment.NewLine);
 
-            Console.Write(" Done. IP: " + ipString + Environment.NewLine);
+                return ipString;
+            }
+            else
+            {
+                var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+                foreach (var adapter in interfaces)
+                {
+                    var ipProps = adapter.GetIPProperties();
 
-            return ipString;
+                    foreach (var ip in ipProps.UnicastAddresses)
+                    {
+                        if (adapter.OperationalStatus == OperationalStatus.Up
+                            && ip.Address.AddressFamily == AddressFamily.InterNetwork
+                            && ip.Address.ToString().StartsWith(config.IpStartsWith, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            Console.WriteLine($"Found relevant ip address '{ip.Address}' on adapter '{adapter.Description}'");
+                            return ip.Address.ToString();
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }
