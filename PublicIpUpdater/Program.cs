@@ -18,8 +18,11 @@ var ipStartsWith = configuration["GLESYS_IP_STARTS_WITH"];
 
 var ttlString = configuration["GLESYS_TTL"] ?? "300";
 
+var intervalString = configuration["GLESYS_INTERVAL"] ?? "60";
+
 var usePublicIp = Convert.ToBoolean(usePublicIpString);
 var ttl = Convert.ToInt32(ttlString);
+var interval = Convert.ToInt32(intervalString);
 
 var domains = configuration["GLESYS_DOMAINS"];
 
@@ -46,7 +49,6 @@ if (string.IsNullOrEmpty(domains))
     Console.WriteLine("Variable GLESYS_DOMAINS is required in format '<domain1>#<host1>,<host2>|<domain2>#<host1>,<host2>'");
     return;
 }
-
 
 if (!usePublicIp && string.IsNullOrEmpty(ipStartsWith))
 {
@@ -84,8 +86,11 @@ var config = new PublicIpUpdaterSettings()
 
 Console.WriteLine("Starting...");
 
-
-var updateRecords = new UpdateRecords();
-updateRecords.DoUpdate(config);
+while (true)
+{
+    var updateRecords = new UpdateRecords();
+    updateRecords.DoUpdate(config);
+    await Task.Delay(TimeSpan.FromMinutes(interval));
+}
 
 Console.WriteLine("Exiting...");
