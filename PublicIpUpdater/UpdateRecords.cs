@@ -107,11 +107,10 @@ namespace PublicIpUpdater
             else
             {
                 var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+                Console.WriteLine($"Listing all IPs and adapters");
                 foreach (var adapter in interfaces)
                 {
                     var ipProps = adapter.GetIPProperties();
-
-                    Console.WriteLine($"Listing all IPs and adapters");
                     foreach (var ip in ipProps.UnicastAddresses)
                     {
                         Console.WriteLine($"  - '{ip.Address}' on adapter '{adapter.Description}'");
