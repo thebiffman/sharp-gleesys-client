@@ -84,10 +84,10 @@ var config = new PublicIpUpdaterSettings()
     RecordsToUpdate = recordList,
 };
 
-Console.WriteLine("Starting...");
 
 while (true)
 {
+    Console.WriteLine($"Starting run at {DateTime.Now:s}...");
     var updateRecords = new UpdateRecords();
     updateRecords.DoUpdate(config);
     await Task.Delay(TimeSpan.FromMinutes(interval));
